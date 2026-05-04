@@ -216,25 +216,26 @@ const hiNodes=nodes.filter(n=>n.freq>=.3).sort((a,b)=>b.freq-a.freq);
 // 持续渲染闪烁
 function drawConstellation(timestamp){
   csx.clearRect(0,0,w2,h2);
-  // 连线
+  const twinkles=nodes.map(n=>{n.phase+=n.speed;
+    const raw=Math.sin(n.phase);
+    const sharp=raw>.3?Math.pow((raw-.3)/.7,4):0;
+    return 1-(1-sharp)*Math.max(0,1-n.freq*1.8);
+  });
   const drawn=new Set();
   hiNodes.forEach((a,ai)=>{
     const neighbors=hiNodes.map((b,bi)=>({bi,dist:Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2)})).filter(nb=>nb.bi!==ai&&nb.dist<250).sort((x,y)=>x.dist-y.dist).slice(0,4);
     neighbors.forEach(({bi})=>{
       const b=hiNodes[bi],key=Math.min(ai,bi)+'_'+Math.max(ai,bi);if(drawn.has(key))return;drawn.add(key);
-      const alpha=.10+(a.freq+b.freq)/2*.20;
+      const ai2=nodes.indexOf(a),bi2=nodes.indexOf(b);
+      const tw=(twinkles[ai2]+twinkles[bi2])/2;
+      const alpha=(.06+(a.freq+b.freq)/2*.18)*tw;
       csx.beginPath();csx.moveTo(a.x,a.y);csx.lineTo(b.x,b.y);
-      csx.strokeStyle=`rgba(180,140,70,${alpha})`;csx.lineWidth=.6+(a.freq+b.freq)/2*1.5;csx.stroke();
+      csx.strokeStyle=`rgba(180,140,70,${alpha})`;csx.lineWidth=.5+(a.freq+b.freq)/2*1.2;csx.stroke();
     });
   });
-  // 星点（闪烁）
-  nodes.forEach(n=>{n.phase+=n.speed;
-    // 低频：短暂闪烁 + 明显间隔
-    const raw=Math.sin(n.phase);
-    const sharp=raw>.3?Math.pow((raw-.3)/.7,4):0;
-    const twinkle=1-(1-sharp)*Math.max(0,1-n.freq*1.8);
+  nodes.forEach((n,i)=>{const twinkle=twinkles[i];
     const r=1.2+n.freq*4;
-    const alpha=(.18+n.freq*.5)*twinkle;
+    const alpha=(.22+n.freq*.5)*twinkle;
     csx.fillStyle=`rgba(180,130,50,${alpha})`;
     csx.beginPath();csx.arc(n.x,n.y,r,0,Math.PI*2);csx.fill();
     csx.fillStyle=`rgba(110,70,45,${(.25+n.freq*.4)*twinkle})`;
@@ -242,9 +243,7 @@ function drawConstellation(timestamp){
     csx.textAlign='center';
     csx.fillText(n.t,n.x,n.y+r+6);
   });
-  requestAnimationFrame(drawConstellation);
-}
-requestAnimationFrame(drawConstellation);
+
 
 // 深夜
 const night=rec.filter(r=>r.hour>=22||r.hour<6);
