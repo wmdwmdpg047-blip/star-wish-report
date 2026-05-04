@@ -135,13 +135,13 @@
 function ac(el,t,d=1200){const s=0,st=performance.now();function u(n){const e=Math.min((n-st)/d,1),p=1-Math.pow(1-e,3);el.textContent=Math.floor(s+(t-s)*p);if(e<1)requestAnimationFrame(u);}requestAnimationFrame(u);}
 const co=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const el=e.target,t=parseInt(el.dataset.target);if(t&&!el.dataset.c){el.dataset.c='1';ac(el,t);}}});},{threshold:.5});
 
-// === 从本地 data.json 加载数据 ===
+// === 数据 ===
 let RAW = [];
 fetch('data.json').then(r=>r.json()).then(data=>{
   if(data&&data.length){RAW=data;}
   init();
 }).catch(()=>{
-  RAW=[{id:"20260502_012212",text:"--",category:"小确幸",tags:"星愿",_hour:1}];
+  RAW=[{id:"20260502_012212",text:"--",category:"小确幸/小感恩",tags:"星愿",_hour:1}];
   init();
 });
 
@@ -216,11 +216,13 @@ const hiNodes=nodes.filter(n=>n.freq>=.3).sort((a,b)=>b.freq-a.freq);
 // 持续渲染闪烁
 function drawConstellation(timestamp){
   csx.clearRect(0,0,w2,h2);
+  // 先算每个节点的闪烁值
   const twinkles=nodes.map(n=>{n.phase+=n.speed;
     const raw=Math.sin(n.phase);
     const sharp=raw>.3?Math.pow((raw-.3)/.7,4):0;
     return 1-(1-sharp)*Math.max(0,1-n.freq*1.8);
   });
+  // 连线（也闪烁）
   const drawn=new Set();
   hiNodes.forEach((a,ai)=>{
     const neighbors=hiNodes.map((b,bi)=>({bi,dist:Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2)})).filter(nb=>nb.bi!==ai&&nb.dist<250).sort((x,y)=>x.dist-y.dist).slice(0,4);
@@ -233,6 +235,7 @@ function drawConstellation(timestamp){
       csx.strokeStyle=`rgba(180,140,70,${alpha})`;csx.lineWidth=.5+(a.freq+b.freq)/2*1.2;csx.stroke();
     });
   });
+  // 星点（闪烁）
   nodes.forEach((n,i)=>{const twinkle=twinkles[i];
     const r=1.2+n.freq*4;
     const alpha=(.22+n.freq*.5)*twinkle;
@@ -243,7 +246,9 @@ function drawConstellation(timestamp){
     csx.textAlign='center';
     csx.fillText(n.t,n.x,n.y+r+6);
   });
-
+  requestAnimationFrame(drawConstellation);
+}
+requestAnimationFrame(drawConstellation);
 
 // 深夜
 const night=rec.filter(r=>r.hour>=22||r.hour<6);
