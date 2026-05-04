@@ -20,21 +20,28 @@ function req(method, path, headers = {}) {
 }
 
 (async () => {
-  const d = gmt(), s = sign('GET', d, `/${BUCKET}/`);
-  const xml = await req('GET', '/?prefix=records/&max-keys=500', { Date: d, Authorization: `OSS ${KEY}:${s}` });
-  const keys = [...xml.matchAll(/<Key>records\/(\d+_\d+)\.json<\/Key>/g)].map(m => m[0]);
+  let d = gmt();
+  const listXml = await req('GET', '/?prefix=records/&max-keys=500', {
+    Date: d, Authorization: `OSS ${KEY}:${sign('GET', d, `/${BUCKET}/`)}`,
+  });
+  const keys = [...listXml.matchAll(/<Key>(records\/\d+_\d+\.json)<\/Key>/g)].map(m => m[1]);
 
   const records = [];
   for (const key of keys) {
     try {
-      const j = await req('GET', `/${key.slice(5, -1)}`);
-      const r = JSON.parse(j);
+      d = gmt();
+      const path = `/${key}`;
+      const json = await req('GET', path, {
+        Date: d, Authorization: `OSS ${KEY}:${sign('GET', d, `/${BUCKET}${path}`)}`,
+      });
+      const r = JSON.parse(json);
       const id = key.match(/(\d+_\d+)/)[1];
       r._id = id; r._hour = parseInt(id.slice(9, 11), 10);
       records.push(r);
-    } catch (e) { console.error(key, e.message); }
+      console.log('✅', id);
+    } catch (e) { console.log('❌', key, e.message); }
   }
   records.sort((a, b) => a._id.localeCompare(b._id));
   fs.writeFileSync('data.json', JSON.stringify(records, null, 2));
-  console.log(`✅ ${records.length} 条记录`);
+  console.log('✅', records.length, '条记录');
 })();
