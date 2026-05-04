@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星愿日记 · 星尘极光</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; }
+  body { background: #fdf6f0; color: #4a3528; font-family: "Noto Serif SC", Georgia, serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  .sky-layer { position: fixed; inset: 0; z-index: -3; background: radial-gradient(ellipse 90% 40% at 20% 0%, rgba(255,210,160,.45) 0%, transparent 50%), radial-gradient(ellipse 70% 35% at 80% 25%, rgba(210,175,200,.25) 0%, transparent 45%), radial-gradient(ellipse 80% 35% at 50% 95%, rgba(255,235,210,.4) 0%, transparent 40%), linear-gradient(180deg, #fdf6f0 0%, #fef4ea 35%, #fcf0ec 65%, #f7ecf4 100%); }
+  .stars-layer { position: fixed; inset: -50% 0; z-index: -2; pointer-events: none; }
+  .star-d { position: absolute; color: rgba(190,140,60,.3); animation: glow var(--d) ease-in-out infinite; animation-delay: var(--dl); font-size: var(--s); }
+  @keyframes glow { 0%,100%{opacity:.25;transform:scale(.8)} 50%{opacity:1;transform:scale(1.4)} }
+  .meteor { position: fixed; z-index: -1; pointer-events: none; width: 2px; height: 2px; background: #e0c070; border-radius: 50%; box-shadow: 0 0 6px 2px rgba(220,180,80,.6), 0 0 30px 8px rgba(200,150,50,.2); animation: meteor var(--md) linear infinite; animation-delay: var(--mdl); opacity:0; }
+  .meteor::after { content:''; position:absolute; left:-60px;top:50%; width:60px;height:1px; background:linear-gradient(90deg,transparent,rgba(220,180,80,.7)); transform:translateY(-50%); }
+  @keyframes meteor { 0%{opacity:0;transform:translate(0,0) rotate(-35deg)} 3%{opacity:1} 8%{opacity:0;transform:translate(250px,600px) rotate(-35deg)} 100%{opacity:0} }
+  .progress-bar { position:fixed;right:14px;top:50%;transform:translateY(-50%);z-index:20;display:flex;flex-direction:column;gap:10px; }
+  .progress-dot { width:7px;height:7px;border-radius:50%;background:rgba(180,130,80,.2);transition:all .3s;cursor:pointer; }
+  .progress-dot.active { background:#c08040;box-shadow:0 0 8px rgba(200,130,60,.4);transform:scale(1.4); }
+  .main { position:relative; }
+  .page { min-height:100vh;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px 28px;max-width:520px;margin:0 auto; }
+  .reveal { opacity:0;transform:translateY(30px);transition:.8s cubic-bezier(.4,0,.2,1); }
+  .reveal.visible { opacity:1;transform:translateY(0); }
+  .d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+  .cover{text-align:center}
+  .cover h1{font-size:44px;font-weight:200;letter-spacing:12px;background:linear-gradient(135deg,#b07030,#d4a050);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px}
+  .cover .sub{font-size:13px;color:#b89870;letter-spacing:8px;padding:8px 28px;border:1px solid rgba(180,140,100,.25);border-radius:24px}
+  .swipe{margin-top:36px;font-size:11px;color:#c0a080;letter-spacing:6px;animation:bounce 2s infinite}
+  @keyframes bounce{0%,100%{opacity:.4;transform:translateY(0)}50%{opacity:1;transform:translateY(8px)}}
+  .ch-label{font-size:10px;color:#c08040;letter-spacing:8px;margin-bottom:14px}
+  .ch-title{font-size:32px;font-weight:200;line-height:1.4;color:#5a4030;margin-bottom:28px}
+  .ch-title .gold{color:#c08040}
+  .glass-card{background:rgba(255,255,255,.55);backdrop-filter:blur(16px);border-radius:20px;padding:28px 24px;border:1px solid rgba(200,160,120,.1);box-shadow:0 4px 30px rgba(160,120,70,.06);max-width:400px;margin:14px auto;text-align:left;position:relative;transition:transform .3s,box-shadow .3s}
+  .glass-card:hover{transform:translateY(-3px);box-shadow:0 8px 36px rgba(160,120,70,.1)}
+  .glass-card .gc-tag{font-size:10px;color:#c08040;letter-spacing:5px;margin-bottom:10px}
+  .glass-card .gc-text{font-size:15px;line-height:2;color:#4a3020}
+  .glass-card .gc-meta{font-size:11px;color:#b0a090;margin-top:12px;text-align:right}
+  .glass-card::before{content:'❝';position:absolute;top:6px;left:14px;font-size:34px;color:rgba(200,140,60,.1)}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:16px 0 28px}
+  .stat-item{text-align:center;padding:18px 8px;background:rgba(255,255,255,.45);backdrop-filter:blur(8px);border-radius:16px;border:1px solid rgba(200,160,120,.06)}
+  .stat-item .sn{font-size:48px;font-weight:100;color:#c08040;line-height:1.2}
+  .stat-item .sl{font-size:11px;color:#b89870}
+  .orbit-chart{position:relative;width:300px;height:300px;margin:0 auto}
+  .orbit-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,#fdf6f0 30%,rgba(245,200,66,.4));box-shadow:0 0 20px rgba(220,170,70,.3);display:flex;align-items:center;justify-content:center}
+  .orbit-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:16px}
+  .orbit-legend .ol-item{display:flex;align-items:center;gap:6px;font-size:11px;color:#8a7060}
+  .orbit-legend .ol-dot{width:10px;height:10px;border-radius:50%}
+  .emo-constellation{position:relative;width:340px;height:400px;margin:0 auto}
+  .ring-group{display:flex;justify-content:center;flex-wrap:wrap;gap:22px;padding:20px 0}
+  .ring-item{text-align:center;transition:transform .35s}
+  .ring-item:hover{transform:scale(1.12)}
+  .ring-item .ring{width:80px;height:80px;border-radius:50%;border:4px solid var(--c);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;background:radial-gradient(circle at 35% 35%,white 25%,rgba(255,255,255,.5) 45%,transparent 50%);box-shadow:0 0 18px var(--glow)}
+  .ring-item .rn{font-size:18px;font-weight:600;color:#4a3020}
+  .ring-item .rt{font-size:10px;color:#a08870;max-width:70px;line-height:1.4}
+  .ring-item .rp{font-size:12px;color:#c08040;margin-top:2px}
+  .pill-group{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:16px 0}
+  .pill{padding:8px 18px;border-radius:22px;font-size:13px;background:rgba(255,255,255,.4);border:1px solid rgba(200,160,120,.12);color:#8a7060;transition:all .25s}
+  .pill:hover{transform:scale(1.06)}
+  .pill.hot{background:#fdf0e0;border-color:rgba(200,140,60,.25);color:#7a4510;font-weight:600;box-shadow:0 2px 12px rgba(200,140,60,.08)}
+  .wave-chart{display:flex;align-items:flex-end;height:130px;background:rgba(255,255,255,.25);backdrop-filter:blur(6px);border-radius:18px;width:100%;padding:8px 4px 0}
+  .wc-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+  .wc-bar{width:85%;min-height:2px;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#e0b050,#d4a0a0,#c0a0d0);transition:height .6s}
+  .wc-tick{font-size:8px;color:#c0b0a0;margin-top:4px;width:100%;text-align:center;height:12px;line-height:12px}
+  .big-num{text-align:center;padding:32px 24px;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);border-radius:24px;border:1px solid rgba(200,160,120,.08);margin:14px 0}
+  .big-num .bn{font-size:64px;font-weight:100;color:#c08040;line-height:1}
+  .big-num .bs{font-size:13px;color:#a09080;margin-top:6px}
+  .ending{text-align:center}
+  .ending .ei{font-size:48px;color:#c08040;margin-bottom:14px;animation:float 4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-10px) rotate(5deg)}}
+  .ending .en{font-size:52px;font-weight:100;color:#c08040}
+  .ending .et{font-size:14px;color:#a09080;line-height:2.2;margin:18px 0}
+</style>
+</head>
+<body>
+<div class="sky-layer"></div>
+<div class="stars-layer" id="stars"></div>
+<div class="meteor" style="top:10%;left:75%;--md:8s;--mdl:1s;"></div>
+<div class="meteor" style="top:30%;left:15%;--md:9s;--mdl:5s;"></div>
+<div class="meteor" style="top:50%;left:60%;--md:7s;--mdl:3s;"></div>
+<nav class="progress-bar">
+  <a class="progress-dot active" href="#p0"></a><a class="progress-dot" href="#p1"></a><a class="progress-dot" href="#p2"></a><a class="progress-dot" href="#p3"></a><a class="progress-dot" href="#p4"></a><a class="progress-dot" href="#p5"></a><a class="progress-dot" href="#p6"></a><a class="progress-dot" href="#p7"></a>
+</nav>
+
+<div class="main">
+  <section class="page cover" id="p0"><div style="font-size:52px;margin-bottom:18px;letter-spacing:14px;">✦ ⭑ ★</div><h1>星愿日记</h1><div class="sub">2026 · 星尘极光</div><div class="swipe">↓ 向上滑动开启</div></section>
+
+  <section class="page" id="p1">
+    <div class="ch-label reveal">✦ 时光印记</div><h2 class="ch-title reveal d1">这个五月<br>你<span class="gold">记录</span>了</h2>
+    <div class="stat-grid reveal d2" id="stat-grid"></div>
+    <div class="glass-card reveal d3" id="busy-card"><div class="gc-tag">最特别的一天</div><div class="gc-text">--</div><div class="gc-meta">--</div></div>
+  </section>
+
+  <section class="page" id="p2">
+    <div class="ch-label reveal">✦ 情绪轨道</div><h2 class="ch-title reveal d1">情绪的<span class="gold">轨道</span></h2>
+    <div class="orbit-chart reveal d2" id="orbit"><div class="orbit-center">✦</div></div>
+    <div class="orbit-legend reveal d3" id="orbit-legend"></div>
+  </section>
+
+  <section class="page" id="p3">
+    <div class="ch-label reveal">✦ 情绪星座</div><h2 class="ch-title reveal d1">你的<span class="gold">专属</span>星图</h2>
+    <div class="emo-constellation reveal d2" id="emo-constellation"><canvas id="constellation-canvas"></canvas></div>
+  </section>
+
+  <section class="page" id="p4">
+    <div class="ch-label reveal">✦ 深夜的你</div><h2 class="ch-title reveal d1">深夜的<span class="gold">你</span></h2>
+    <div class="big-num reveal d2"><div class="bn" id="night-pct">--</div><div class="bs">记录发生在 22:00 — 06:00</div></div>
+    <div class="glass-card reveal d3" id="night-card"><div class="gc-tag">🌙 深夜独白</div><div class="gc-text">--</div><div class="gc-meta">--</div></div>
+  </section>
+
+  <section class="page" id="p5">
+    <div class="ch-label reveal">✦ 记录节律</div><h2 class="ch-title reveal d1">时间的<span class="gold">节律</span></h2>
+    <div class="wave-chart reveal d2" id="wave-chart"></div>
+    <p style="margin-top:16px;font-size:15px;color:#5a4030;" class="reveal d3" id="rtype"></p>
+  </section>
+
+  <section class="page" id="p6">
+    <div class="ch-label reveal">✦ 高光时刻</div><h2 class="ch-title reveal d1">高光<span class="gold">时刻</span></h2>
+    <div class="glass-card reveal d2"><div class="gc-tag">📝 你最长的独白</div><div class="gc-text" id="lt">--</div><div class="gc-meta" id="lm">--</div></div>
+    <div class="glass-card reveal d3" id="rbc"><div class="gc-tag">🔄 情绪的转折</div><div class="gc-text">--</div><div class="gc-meta">--</div></div>
+  </section>
+
+  <section class="page ending" id="p7">
+    <div class="ei">✦</div><div class="en" id="end-count">--</div>
+    <div style="font-size:12px;color:#c0a080;margin-top:4px;">颗星 · 一颗一个心愿</div>
+    <p class="et">「每一次记录<br>都是星空中<br>悄然点亮的光」</p>
+    <div style="font-size:10px;color:#c0b0a0;">STAR WISH · 2026.05</div>
+  </section>
+</div>
+
+<script>
+(function(){const s=['✦','⭑','★','·','✧'],c=document.getElementById('stars');for(let i=0;i<45;i++){const d=document.createElement('div');d.className='star-d';d.style.cssText=`top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--dl:${Math.random()*5}s;--s:${10+Math.random()*20}px`;d.textContent=s[i%5];c.appendChild(d);}window.addEventListener('scroll',()=>{c.style.transform=`translateY(${window.scrollY*.05}px)`;},{passive:true});})();
+(function(){const dots=document.querySelectorAll('.progress-dot'),pages=document.querySelectorAll('.page[id]');const po=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){dots.forEach(d=>d.classList.remove('active'));const i=Array.from(pages).indexOf(e.target);if(i>=0&&i<dots.length)dots[i].classList.add('active');}});},{threshold:.4});pages.forEach(p=>po.observe(p));dots.forEach((d,i)=>{d.addEventListener('click',e=>{e.preventDefault();pages[i]?.scrollIntoView({behavior:'smooth'});});});})();
+(function(){const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:.2});document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));})();
+function ac(el,t,d=1200){const s=0,st=performance.now();function u(n){const e=Math.min((n-st)/d,1),p=1-Math.pow(1-e,3);el.textContent=Math.floor(s+(t-s)*p);if(e<1)requestAnimationFrame(u);}requestAnimationFrame(u);}
+const co=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const el=e.target,t=parseInt(el.dataset.target);if(t&&!el.dataset.c){el.dataset.c='1';ac(el,t);}}});},{threshold:.5});
+
+// === 从本地 data.json 加载数据 ===
+let RAW = [];
+fetch('data.json').then(r=>r.json()).then(data=>{
+  if(data&&data.length){RAW=data;}
+  init();
+}).catch(()=>{
+  RAW=[{id:"20260502_012212",text:"--",category:"小确幸",tags:"星愿",_hour:1}];
+  init();
+});
+
+function init(){
+
+const rec=RAW.map(r=>({id:r.id,text:r.text,cat:r.category,date:r.id.slice(0,8).replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3'),tags:r.tags.split(','),hour:r._hour})).sort((a,b)=>a.id.localeCompare(b.id));
+const T=rec.length,W=rec.reduce((s,r)=>s+r.text.length,0),D=[...new Set(rec.map(r=>r.date))].length;
+
+document.getElementById('stat-grid').innerHTML=`<div class="stat-item"><div class="sn" data-target="${T}">0</div><div class="sl">条星愿</div></div><div class="stat-item"><div class="sn" data-target="${W}">0</div><div class="sl">字</div></div><div class="stat-item"><div class="sn" data-target="${D}">0</div><div class="sl">天</div></div>`;
+document.querySelectorAll('.sn').forEach(el=>co.observe(el));
+document.getElementById('end-count').textContent=T;
+const dc={};rec.forEach(r=>{dc[r.date]=(dc[r.date]||0)+1});
+const b=Object.entries(dc).sort((a,b)=>b[1]-a[1])[0];
+document.getElementById('busy-card').querySelector('.gc-text').textContent=`这一天，你记录了 ${b[1]} 条星愿`;
+document.getElementById('busy-card').querySelector('.gc-meta').textContent=`${b[0]} · ${rec.filter(r=>r.date===b[0]).map(r=>r.text).join(' / ')}`;
+
+// === 情绪轨道（首尾相接 + 内圈先出） ===
+const orbitOrder=["许愿","当下情绪","想对自己说","杂念思绪","小确幸/小感恩"];
+const cc={};rec.forEach(r=>{cc[r.cat]=(cc[r.cat]||0)+1});
+const catColors=['#90c0a0','#e0c090','#c0a0d0','#e0a0a0','#e0b050'];
+const catNames=['许愿','当下情绪','对自己说','杂念思绪','小确幸'];
+const orbit=document.getElementById('orbit');
+const svgNS='http://www.w3.org/2000/svg';
+const svg=document.createElementNS(svgNS,'svg');
+svg.setAttribute('width','300');svg.setAttribute('height','300');
+svg.style.cssText='position:absolute;inset:0;';
+const cx=150,cy=150,radii=[60,80,100,120,140];
+
+// 渐显动画
+const animStyle=document.createElement('style');
+animStyle.textContent=`.orbit-ring{animation:ringDraw .8s ease forwards;animation-play-state:paused;}.orbit-ring.play{animation-play-state:running;}@keyframes ringDraw{from{stroke-dashoffset:var(--len);opacity:0}to{stroke-dashoffset:0;opacity:1}}`;
+document.head.appendChild(animStyle);
+
+let angle=-Math.PI/2;
+orbitOrder.forEach((c,i)=>{
+  const p=(cc[c]||0)/T,r=radii[i];
+  const sa=angle,ea=angle+Math.PI*2*p;
+  const x1=cx+r*Math.cos(sa),y1=cy+r*Math.sin(sa);
+  const x2=cx+r*Math.cos(ea),y2=cy+r*Math.sin(ea);
+  const large=p>.5?1:0,len=2*Math.PI*r*p;
+  const path=document.createElementNS(svgNS,'path');
+  path.setAttribute('d',`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`);
+  path.setAttribute('stroke',catColors[i]);path.setAttribute('stroke-width','5');
+  path.setAttribute('fill','none');path.setAttribute('stroke-linecap','round');
+  path.classList.add('orbit-ring');path.style.setProperty('--len',len);
+  path.style.strokeDasharray=len;path.style.strokeDashoffset=len;
+  path.style.animationDelay=`${i*.15}s`;svg.appendChild(path);
+  angle=ea;
+});
+orbit.innerHTML='';orbit.appendChild(svg);
+const center=document.createElement('div');center.className='orbit-center';center.textContent='✦';orbit.appendChild(center);
+const orbitObs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)orbit.querySelectorAll('.orbit-ring').forEach(r=>r.classList.add('play'));});},{threshold:.6});
+orbitObs.observe(orbit);
+document.getElementById('orbit-legend').innerHTML=orbitOrder.map((c,i)=>`<div class="ol-item"><div class="ol-dot" style="background:${catColors[i]}"></div>${catNames[i]} ${Math.round((cc[c]||0)/T*100)}%</div>`).join('');
+
+// === 情绪星座（带闪烁动效） ===
+const tm={};rec.forEach(r=>r.tags.forEach(t=>{tm[t]=(tm[t]||0)+1}));
+const sorted=Object.entries(tm).sort((a,b)=>b[1]-a[1]);
+const maxN=sorted[0]?sorted[0][1]:1;
+const csCanvas=document.getElementById('constellation-canvas');
+const dpr=window.devicePixelRatio||1;
+csCanvas.width=340*dpr;csCanvas.height=400*dpr;
+csCanvas.style.width='340px';csCanvas.style.height='400px';
+const csx=csCanvas.getContext('2d');csx.scale(dpr,dpr);csx.textBaseline='top';
+const seed=sorted.reduce((a,[t,n])=>a+t.charCodeAt(0)*n,0);let sr=seed;
+function rnd(){sr=(sr*16807+0)%2147483647;return(sr-1)/2147483646;}
+const nodes=[],margin=28,w2=340,h2=400;
+sorted.forEach(([t,n])=>{const freq=n/maxN;let x=margin+rnd()*(w2-margin*2),y=margin+rnd()*(h2-margin*2);const cx2=155,cy2=180,pull=freq*.2;x=x*(1-pull)+cx2*pull;y=y*(1-pull)+cy2*pull;nodes.push({t,n,freq,x,y,phase:rnd()*Math.PI*2,speed:.004+rnd()*.02});});
+for(let pass=0;pass<3;pass++){for(let i=0;i<nodes.length;i++){for(let j=i+1;j<nodes.length;j++){const dx=nodes[i].x-nodes[j].x,dy=nodes[i].y-nodes[j].y;const dist=Math.sqrt(dx*dx+dy*dy);if(dist<25&&dist>0){const push=(25-dist)/2,nx=dx/dist*push,ny=dy/dist*push;nodes[i].x+=nx;nodes[i].y+=ny;nodes[j].x-=nx;nodes[j].y-=ny;nodes[i].x=Math.max(margin,Math.min(w2-margin,nodes[i].x));nodes[i].y=Math.max(margin,Math.min(h2-margin,nodes[i].y));nodes[j].x=Math.max(margin,Math.min(w2-margin,nodes[j].x));nodes[j].y=Math.max(margin,Math.min(h2-margin,nodes[j].y));}}}}
+const hiNodes=nodes.filter(n=>n.freq>=.3).sort((a,b)=>b.freq-a.freq);
+
+// 持续渲染闪烁
+function drawConstellation(timestamp){
+  csx.clearRect(0,0,w2,h2);
+  // 连线
+  const drawn=new Set();
+  hiNodes.forEach((a,ai)=>{
+    const neighbors=hiNodes.map((b,bi)=>({bi,dist:Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2)})).filter(nb=>nb.bi!==ai&&nb.dist<250).sort((x,y)=>x.dist-y.dist).slice(0,4);
+    neighbors.forEach(({bi})=>{
+      const b=hiNodes[bi],key=Math.min(ai,bi)+'_'+Math.max(ai,bi);if(drawn.has(key))return;drawn.add(key);
+      const alpha=.04+(a.freq+b.freq)/2*.08;
+      csx.beginPath();csx.moveTo(a.x,a.y);csx.lineTo(b.x,b.y);
+      csx.strokeStyle=`rgba(180,140,70,${alpha})`;csx.lineWidth=.3+(a.freq+b.freq)/2*.5;csx.stroke();
+    });
+  });
+  // 星点（闪烁）
+  nodes.forEach(n=>{n.phase+=n.speed;
+    // 低频：短暂闪烁 + 明显间隔
+    const raw=Math.sin(n.phase);
+    const sharp=raw>.3?Math.pow((raw-.3)/.7,4):0;
+    const twinkle=1-(1-sharp)*Math.max(0,1-n.freq*1.8);
+    const r=1.2+n.freq*4;
+    const alpha=(.18+n.freq*.5)*twinkle;
+    csx.fillStyle=`rgba(180,130,50,${alpha})`;
+    csx.beginPath();csx.arc(n.x,n.y,r,0,Math.PI*2);csx.fill();
+    csx.fillStyle=`rgba(110,70,45,${(.25+n.freq*.4)*twinkle})`;
+    csx.font=`${9+n.freq*5}px "Noto Serif SC", Georgia, serif`;
+    csx.textAlign='center';
+    csx.fillText(n.t,n.x,n.y+r+6);
+  });
+  requestAnimationFrame(drawConstellation);
+}
+requestAnimationFrame(drawConstellation);
+
+// 深夜
+const night=rec.filter(r=>r.hour>=22||r.hour<6);
+document.getElementById('night-pct').textContent=Math.round(night.length/T*100)+'%';
+const nl=night.sort((a,b)=>b.text.length-a.text.length)[0];
+if(nl){document.getElementById('night-card').querySelector('.gc-text').textContent=nl.text;document.getElementById('night-card').querySelector('.gc-meta').textContent=`${nl.date} ${String(nl.hour).padStart(2,'0')}:00`;}
+
+// 节律
+const hc=Array(24).fill(0);rec.forEach(r=>hc[r.hour]++);
+const mx=Math.max(...hc,1);
+document.getElementById('wave-chart').innerHTML=hc.map((v,h)=>{const show=h%3===0||h===23;return`<div class="wc-col"><div class="wc-bar" style="height:${Math.max(v/mx*110,2)}px"></div><span class="wc-tick">${show?h:''}</span></div>`}).join('');
+const am=hc.slice(6,12).reduce((a,b)=>a+b),pm=hc.slice(22).reduce((a,b)=>a+b)+hc.slice(0,6).reduce((a,b)=>a+b);
+document.getElementById('rtype').textContent=pm>am?'🌙 深夜型——黑夜是你的灵感时刻':'☀️ 白天型——阳光下的记录最真实';
+
+// 高光
+const long=rec.sort((a,b)=>b.text.length-a.text.length)[0];
+document.getElementById('lt').textContent=long.text;
+document.getElementById('lm').textContent=`${long.date} · ${long.text.length}字`;
+const neg=["当下情绪","杂念思绪"],pos=["小确幸/小感恩","许愿"];
+const srt=[...rec];let rb=null;
+for(let i=1;i<srt.length;i++){if(neg.includes(srt[i-1].cat)&&pos.includes(srt[i].cat)){rb=srt.slice(i-1,i+1);break;}}
+if(rb){document.getElementById('rbc').querySelector('.gc-text').innerHTML=`从「${rb[0].text.slice(0,35)}...」<br>→ 到「${rb[1].text.slice(0,35)}...」`;document.getElementById('rbc').querySelector('.gc-meta').textContent=`${rb[0].date} → ${rb[1].date}`;}
+} // end init
+</script>
+</body>
+</html>

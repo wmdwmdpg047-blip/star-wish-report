@@ -1,0 +1,22 @@
+name: 每日同步星愿数据
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # 每6小时
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: node fetch-data.js
+        env:
+          OSS_KEY: ${{ secrets.OSS_KEY }}
+          OSS_SECRET: ${{ secrets.OSS_SECRET }}
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: '📡 自动同步云端数据'
+          file_pattern: 'data.json'
