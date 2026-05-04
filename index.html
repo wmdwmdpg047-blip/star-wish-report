@@ -222,9 +222,9 @@ function drawConstellation(timestamp){
     const neighbors=hiNodes.map((b,bi)=>({bi,dist:Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2)})).filter(nb=>nb.bi!==ai&&nb.dist<250).sort((x,y)=>x.dist-y.dist).slice(0,4);
     neighbors.forEach(({bi})=>{
       const b=hiNodes[bi],key=Math.min(ai,bi)+'_'+Math.max(ai,bi);if(drawn.has(key))return;drawn.add(key);
-      const alpha=.04+(a.freq+b.freq)/2*.08;
+      const alpha=.10+(a.freq+b.freq)/2*.20;
       csx.beginPath();csx.moveTo(a.x,a.y);csx.lineTo(b.x,b.y);
-      csx.strokeStyle=`rgba(180,140,70,${alpha})`;csx.lineWidth=.3+(a.freq+b.freq)/2*.5;csx.stroke();
+      csx.strokeStyle=`rgba(180,140,70,${alpha})`;csx.lineWidth=.6+(a.freq+b.freq)/2*1.5;csx.stroke();
     });
   });
   // 星点（闪烁）
