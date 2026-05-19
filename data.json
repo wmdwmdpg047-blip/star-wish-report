@@ -188,5 +188,15 @@
     "audio_url": "https://star-wish-box.oss-cn-hangzhou.aliyuncs.com/audio/20260505_004516.wav",
     "_id": "20260505_004516",
     "_hour": 0
+  },
+  {
+    "id": "20260519_193044",
+    "text": "好嘞，我等你。",
+    "category": "小确幸/小感恩",
+    "date": "20260519_193044",
+    "tags": "等待,信任,安心",
+    "audio_url": "https://star-wish-box.oss-cn-hangzhou.aliyuncs.com/audio/20260519_193044.wav",
+    "_id": "20260519_193044",
+    "_hour": 19
   }
 ]
